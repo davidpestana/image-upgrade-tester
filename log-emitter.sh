@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.0.2"  # Versión hardcodeada
+VERSION="1.0.3"  # Versión hardcodeada
 
 while true; do
     echo "Logging from version $VERSION"

@@ -68,7 +68,7 @@ jobs:
           echo "LATEST_TAG=latest" >> $GITHUB_ENV
           # Tag based on branch name and unique identifier
           BRANCH_NAME=$(echo "${GITHUB_REF#refs/heads/}")
-          UNIQUE_TAG="${BRANCH_NAME}-${{ github.run_number }}-${{ github.run_id }}-${{ github.sha }}"
+          UNIQUE_TAG="${BRANCH_NAME}-${{ github.run_number }}.$(date +%s).${{ github.run_id }}"
           echo "UNIQUE_TAG=$UNIQUE_TAG" >> $GITHUB_ENV
           echo "BRANCH_TAG=$BRANCH_NAME" >> $GITHUB_ENV
 

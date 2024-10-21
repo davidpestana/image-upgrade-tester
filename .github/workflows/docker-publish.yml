@@ -60,3 +60,25 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # Añadir tags extra solo si no es un release
+      - name: Set up additional tags
+        if: github.event_name != 'release'  # Evitar que se ejecuten en releases
+        run: |
+          # Tag as latest
+          echo "LATEST_TAG=latest" >> $GITHUB_ENV
+          # Tag based on branch name and unique identifier
+          BRANCH_NAME=$(echo "${GITHUB_REF#refs/heads/}")
+          UNIQUE_TAG="${BRANCH_NAME}-${{ github.run_number }}-${{ github.run_id }}-${{ github.sha }}"
+          echo "UNIQUE_TAG=$UNIQUE_TAG" >> $GITHUB_ENV
+          echo "BRANCH_TAG=$BRANCH_NAME" >> $GITHUB_ENV
+
+      # Push de los tags adicionales (solo si no es un release)
+      - name: Push additional tags
+        if: github.event_name != 'release'  # Evitar releases
+        run: |
+          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.LATEST_TAG }}
+          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.UNIQUE_TAG }}
+          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BRANCH_TAG }}
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.LATEST_TAG }}
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.UNIQUE_TAG }}
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BRANCH_TAG }}

@@ -72,15 +72,16 @@ jobs:
           echo "UNIQUE_TAG=$UNIQUE_TAG" >> $GITHUB_ENV
           echo "BRANCH_TAG=$BRANCH_NAME" >> $GITHUB_ENV
 
-      # Push de los tags adicionales usando el digest (solo si no es un release)
-      - name: Push additional tags
+ # Reutilizar docker/build-push-action para aplicar los tags adicionales
+      - name: Apply additional tags
         if: github.event_name != 'release'
-        run: |
-          # Usar el digest de la imagen generada anteriormente
-          IMAGE_DIGEST=${{ steps.build-and-push.outputs.digest }}
-          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${IMAGE_DIGEST} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.LATEST_TAG }}
-          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${IMAGE_DIGEST} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.UNIQUE_TAG }}
-          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${IMAGE_DIGEST} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BRANCH_TAG }}
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.LATEST_TAG }}
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.UNIQUE_TAG }}
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BRANCH_TAG }}
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.LATEST_TAG }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.UNIQUE_TAG }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BRANCH_TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
